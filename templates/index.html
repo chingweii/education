@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智达教育补习中心 | SS2 & SS15</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .hero { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 45px 0; }
+        .card-custom { border-radius: 14px; border: none; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/"><i class="fa-solid fa-graduation-cap text-warning me-2"></i>智达教育补习中心 (SS2 & SS15)</a>
+            <a href="/admin" class="btn btn-outline-light btn-sm"><i class="fa-solid fa-lock me-1"></i>教务后台 (工作人员)</a>
+        </div>
+    </nav>
+
+    <div class="hero text-center">
+        <div class="container">
+            <h2 class="fw-bold mb-2">用心陪伴 · 专注提升</h2>
+            <p class="mb-0 text-white-50">SS2 & SS15 双分店授课 | 小学与中学课程</p>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <div class="row g-4">
+            <!-- Parent Input Form -->
+            <div class="col-lg-6">
+                <div class="card card-custom p-4 bg-white">
+                    <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-paper-plane me-2"></i>家长咨询 / 预约试课</h5>
+                    <p class="text-muted small">请在下方输入您的真实需求，系统将为您生成分类并安排顾问对接。</p>
+
+                    <form id="parentForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">家长姓名 *</label>
+                            <input type="text" id="parent_name" class="form-control" placeholder="请输入您的姓名" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">联系电话 *</label>
+                            <input type="tel" id="phone" class="form-control" placeholder="请输入您的 WhatsApp / 电话号码" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">意向分店 *</label>
+                                <select id="branch" class="form-select" required>
+                                    <option value="" disabled selected>选择分店</option>
+                                    <option value="SS2">SS2 分店</option>
+                                    <option value="SS15">SS15 分店</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">孩子年龄 *</label>
+                                <input type="number" id="child_age" class="form-control" min="7" max="17" placeholder="7 - 17" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">咨询内容 *</label>
+                            <textarea id="question" class="form-control" rows="4" placeholder="在此输入您想询问的具体问题..." required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2" id="submitBtn">
+                            <i class="fa-solid fa-paper-plane me-1"></i>提交咨询
+                        </button>
+                    </form>
+
+                    <div id="statusAlert" class="mt-3 alert d-none"></div>
+                </div>
+            </div>
+
+            <!-- FAQ Reference -->
+            <div class="col-lg-6">
+                <div class="card card-custom p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-circle-question me-2 text-primary"></i>常见问题 (FAQ)</h5>
+                    <div class="accordion accordion-flush" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#f1">
+                                    收费与缴费规则
+                                </button>
+                            </h2>
+                            <div id="f1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-secondary">
+                                    • 小学 RM280/月，中学 RM350/月，报名费 RM50<br>
+                                    • 银行转账或现金，每月 5 号前缴
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#f2">
+                                    营业与上课时间
+                                </button>
+                            </h2>
+                            <div id="f2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-secondary">
+                                    • 周一至五 2pm–8pm，周六 9am–1pm，周日休
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#f3">
+                                    科目与班级
+                                </button>
+                            </h2>
+                            <div id="f3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-secondary">
+                                    • 科目：国文、英文、数学、科学；中学另有历史、地理<br>
+                                    • 每班最多 12 人 | 招收 7 至 17 岁
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('parentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const alertBox = document.getElementById('statusAlert');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            const payload = {
+                parent_name: document.getElementById('parent_name').value,
+                phone: document.getElementById('phone').value,
+                branch: document.getElementById('branch').value,
+                child_age: document.getElementById('child_age').value,
+                question: document.getElementById('question').value
+            };
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>提交中...';
+
+            try {
+                const res = await fetch('/api/inquire', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    alertBox.className = "mt-3 alert alert-success";
+                    alertBox.innerText = data.message;
+                    document.getElementById('parentForm').reset();
+                } else {
+                    alertBox.className = "mt-3 alert alert-danger";
+                    alertBox.innerText = data.message || "提交失败";
+                }
+            } catch (err) {
+                alertBox.className = "mt-3 alert alert-danger";
+                alertBox.innerText = "网络异常，请稍后再试";
+            } finally {
+                alertBox.classList.remove('d-none');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i>提交咨询';
+            }
+        });
+    </script>
+</body>
+</html>

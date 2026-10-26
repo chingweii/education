@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教务管理后台 | 智达补习中心</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .sidebar { background: #0f172a; color: white; min-height: 100vh; }
+        .card-dash { border-radius: 12px; border: none; background: white; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .draft-normal { background: #f8fafc; border-left: 4px solid #3b82f6; padding: 10px; border-radius: 4px; font-size: 0.88rem; }
+        .draft-warn { background: #fffbe6; border-left: 4px solid #ef4444; padding: 10px; border-radius: 4px; font-size: 0.88rem; }
+        
+        /* Password Lock Overlay */
+        .auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px);
+            z-index: 9999; display: flex; align-items: center; justify-content: center;
+        }
+        .auth-card { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 400px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); }
+    </style>
+</head>
+<body>
+
+    <!-- Password Lock Screen Overlay -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-card text-center">
+            <div class="mb-3 text-primary">
+                <i class="fa-solid fa-lock fa-3x"></i>
+            </div>
+            <h4 class="fw-bold mb-2 text-dark">教务后台身份验证</h4>
+            <p class="text-muted small mb-4">本页面受密码保护，请输入工作人员授权密码访问。</p>
+            <form id="loginForm">
+                <div class="mb-3 text-start">
+                    <label class="form-label fw-semibold text-secondary">管理密码</label>
+                    <input type="password" id="adminPasswordInput" class="form-control" placeholder="请输入密码 (默认: admin123)" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2 mb-2">解锁后台</button>
+            </form>
+            <div id="loginAlert" class="alert alert-danger d-none mt-3 small py-2"></div>
+            <a href="/" class="btn btn-link btn-sm text-decoration-none text-muted mt-2"><i class="fa-solid fa-arrow-left me-1"></i>返回家长前台</a>
+        </div>
+    </div>
+
+    <!-- Protected Admin Panel -->
+    <div id="adminPanel" class="d-flex" style="display: none !important;">
+        <!-- Sidebar -->
+        <div class="sidebar p-3 d-flex flex-column" style="width: 250px;">
+            <h5 class="fw-bold mb-4 text-primary"><i class="fa-solid fa-user-shield me-2"></i>教务后台</h5>
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                    <a href="/admin" class="nav-link active"><i class="fa-solid fa-list-check me-2"></i>咨询管理面板</a>
+                </li>
+            </ul>
+            <hr>
+            <div class="d-flex flex-column gap-2">
+                <button onclick="logoutAdmin()" class="btn btn-outline-danger btn-sm w-100"><i class="fa-solid fa-right-from-bracket me-1"></i>退出登录</button>
+                <a href="/" class="btn btn-outline-light btn-sm w-100"><i class="fa-solid fa-arrow-left me-1"></i>前台家长页面</a>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div class="flex-grow-1 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold mb-0">实时咨询数据 & AI 回复审核</h4>
+                <button class="btn btn-outline-primary btn-sm" onclick="loadData()"><i class="fa-solid fa-arrows-rotate me-1"></i>刷新数据</button>
+            </div>
+
+            <!-- Top Counters -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card-dash">
+                        <div class="text-muted small">总咨询数量</div>
+                        <div class="fs-2 fw-bold text-dark" id="statTotal">0</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-dash">
+                        <div class="text-muted small">⚠️ 待人工处理数</div>
+                        <div class="fs-2 fw-bold text-danger" id="statNeedsHuman">0</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-dash">
+                        <div class="text-muted small">当前显示分店</div>
+                        <div class="fs-4 fw-bold text-primary mt-1" id="statBranchLabel">全部分店</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table & Filters -->
+            <div class="card-dash">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="me-3 fw-semibold text-secondary">按分店筛选：</span>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-primary btn-sm active" onclick="filterBranch('all', this)">全部</button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="filterBranch('SS2', this)">SS2 分店</button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="filterBranch('SS15', this)">SS15 分店</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>家长姓名 & 电话</th>
+                                <th>分店 / 年龄</th>
+                                <th>咨询具体内容</th>
+                                <th>AI 自动分类</th>
+                                <th>AI 拟答 (严格基于 FAQ)</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTable">
+                            <tr><td colspan="7" class="text-center py-4 text-muted">暂无数据，等待家长前台提交...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilter = 'all';
+
+        // Check password auth on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const authState = localStorage.getItem('admin_authenticated');
+            if (authState === 'true') {
+                showAdminPanel();
+            } else {
+                showLockOverlay();
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const inputPwd = document.getElementById('adminPasswordInput').value;
+            const alertBox = document.getElementById('loginAlert');
+
+            try {
+                const res = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: inputPwd })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('admin_authenticated', 'true');
+                    alertBox.classList.add('d-none');
+                    showAdminPanel();
+                } else {
+                    alertBox.innerText = data.message || "密码错误";
+                    alertBox.classList.remove('d-none');
+                }
+            } catch(e) {
+                alertBox.innerText = "网络连接失败，请重试";
+                alertBox.classList.remove('d-none');
+            }
+        });
+
+        function showAdminPanel() {
+            document.getElementById('authOverlay').style.display = 'none';
+            document.getElementById('adminPanel').style.setProperty('display', 'flex', 'important');
+            loadData();
+        }
+
+        function showLockOverlay() {
+            document.getElementById('authOverlay').style.display = 'flex';
+            document.getElementById('adminPanel').style.setProperty('display', 'none', 'important');
+        }
+
+        function logoutAdmin() {
+            localStorage.removeItem('admin_authenticated');
+            showLockOverlay();
+        }
+
+        function filterBranch(branch, btn) {
+            currentFilter = branch;
+            document.querySelectorAll('.btn-group .btn').forEach(b => {
+                b.classList.remove('btn-primary', 'active');
+                b.classList.add('btn-outline-primary');
+            });
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-primary', 'active');
+            document.getElementById('statBranchLabel').innerText = branch === 'all' ? '全部分店' : branch + ' 分店';
+            loadData();
+        }
+
+        async function loadData() {
+            try {
+                const res = await fetch(`/api/admin/inquiries?branch=${currentFilter}`);
+                const resData = await res.json();
+                
+                if(!resData.success) return;
+
+                document.getElementById('statTotal').innerText = resData.total;
+                document.getElementById('statNeedsHuman').innerText = resData.needs_human_total;
+
+                const tbody = document.getElementById('dataTable');
+                if(!resData.data || resData.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">目前数据库为空，请在前台提交表单后查看。</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = resData.data.map(item => {
+                    const isManual = item.needs_human === 1;
+                    const draftClass = isManual ? 'draft-warn' : 'draft-normal';
+                    const draftText = item.draft_reply.replace(/\n/g, '<br>');
+
+                    let actionHtml = '';
+                    if(item.status === 'approved') {
+                        actionHtml = '<span class="badge bg-secondary"><i class="fa-solid fa-check me-1"></i>已批准</span>';
+                    } else {
+                        actionHtml = `<button class="btn btn-sm btn-success fw-bold" onclick="approveItem(${item.id})"><i class="fa-solid fa-check me-1"></i>批准回复</button>`;
+                    }
+
+                    return `
+                        <tr>
+                            <td>#${item.id}</td>
+                            <td>
+                                <strong>${item.parent_name}</strong><br>
+                                <small class="text-muted"><i class="fa-solid fa-phone me-1"></i>${item.phone}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark">${item.branch}</span><br>
+                                <small class="text-muted">${item.child_age} 岁</small>
+                            </td>
+                            <td style="max-width: 220px;"><div class="text-break">${item.question}</div></td>
+                            <td>
+                                <span class="badge bg-dark">${item.category}</span><br>
+                                ${isManual ? '<span class="badge bg-danger mt-1">需要人工</span>' : '<span class="badge bg-success mt-1">AI 拟答</span>'}
+                            </td>
+                            <td style="max-width: 320px;"><div class="${draftClass}">${draftText}</div></td>
+                            <td>${actionHtml}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch(err) {
+                console.error(err);
+            }
+        }
+
+        async function approveItem(id) {
+            try {
+                const res = await fetch(`/api/admin/approve/${id}`, { method: 'POST' });
+                const data = await res.json();
+                if(data.success) {
+                    loadData();
+                }
+            } catch(e) {
+                alert("操作失败");
+            }
+        }
+    </script>
+</body>
+</html>
